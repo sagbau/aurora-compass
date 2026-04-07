@@ -5,11 +5,11 @@ export default async function handler(req, res) {
     );
     const data = await response.json();
 
-    // poslední řádek = nejaktuálnější data
     const last = data[data.length - 1];
 
     res.status(200).json({
       bz: Number(last[6]),
+      bt: Number(last[5]),
       speed: Number(last[2]),
       density: Number(last[1]),
       source: "NOAA DSCOVR",
