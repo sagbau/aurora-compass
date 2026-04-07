@@ -1,30 +1,39 @@
 export default async function handler(req, res) {
   try {
-    // 1️⃣ Plasma data: speed + density
-    const plasmaResponse = await fetch(
+    const plasmaRes = await fetch(
       "https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json"
     );
-    const plasmaData = await plasmaResponse.json();
+    const plasma = await plasmaRes.json();
 
-    // 2️⃣ Magnetometer data: Bt + Bz
-    const magResponse = await fetch(
+    const magRes = await fetch(
       "https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json"
     );
-    const magData = await magResponse.json();
+    const mag = await magRes.json();
 
-    // poslední validní řádky
-    const lastPlasma = plasmaData[plasmaData.length - 1];
-    const lastMag = magData[magData.length - 1];
+    // najdi POSLEDNÍ VALIDNÍ plasma vzorek
+    const plasmaData = plasma.slice(1).reverse().find(row =>
+      row[1] && row[2]
+    );
+
+    // najdi POSLEDNÍ VALIDNÍ magnetometer vzorek
+    const magData = mag.slice(1).reverse().find(row =>
+      row[5] && row[6]
+    );
+
+    if (!plasmaData || !magData) {
+      return res.status(503).json({ error: "NOAA data incomplete" });
+    }
 
     res.status(200).json({
-      speed: Number(lastPlasma[2]),
-      density: Number(lastPlasma[1]),
-      bt: Number(lastMag[5]),
-      bz: Number(lastMag[6]),
+      speed: Number(plasmaData[2]),
+      density: Number(plasmaData[1]),
+      bt: Number(magData[5]),
+      bz: Number(magData[6]),
       source: "NOAA DSCOVR",
-      timestamp: lastMag[0]
+      timestamp: magData[0]
     });
-  } catch (error) {
-    res.status(500).json({ error: "NOAA data unavailable" });
+
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load NOAA data" });
   }
 }
