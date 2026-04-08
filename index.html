@@ -15,7 +15,7 @@
       background: #141a34;
       border-radius: 16px;
       padding: 24px;
-      width: 380px;
+      width: 420px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     }
     .row { margin: 6px 0; }
@@ -39,7 +39,9 @@
 
   <div class="section">
     <div class="row" id="kpNow">Kp now: —</div>
-    <div class="row" id="kpForecast">Kp forecast (24h): —</div>
+    <div class="row" id="kp2h">Kp +2h: —</div>
+    <div class="row" id="kp24h">Kp +24h: —</div>
+    <div class="row" id="kp72h">Kp +72h: —</div>
   </div>
 
   <div class="section">
@@ -62,11 +64,15 @@
 
       document.getElementById("kpNow").textContent =
         d.kpNow != null ? `Kp now: ${d.kpNow}` : "Kp now: n/a";
+      document.getElementById("kp2h").textContent =
+        d.kpForecast2h != null ? `Kp +2h: ${d.kpForecast2h}` : "Kp +2h: n/a";
+      document.getElementById("kp24h").textContent =
+        d.kpForecast24h != null ? `Kp +24h: ${d.kpForecast24h}` : "Kp +24h: n/a";
+      document.getElementById("kp72h").textContent =
+        d.kpForecast72h != null ? `Kp +72h: ${d.kpForecast72h}` : "Kp +72h: n/a";
 
-      document.getElementById("kpForecast").textContent =
-        d.kpForecast24h != null ? `Kp forecast (24h): ${d.kpForecast24h}` : "Kp forecast (24h): n/a";
-
-      document.getElementById("eta").textContent = `ETA to Earth: ${d.etaMinutes} min`;
+      document.getElementById("eta").textContent =
+        `ETA to Earth: ${d.etaMinutes} min`;
       document.getElementById("arrival").textContent =
         `Expected arrival: ${new Date(d.arrivalTime).toUTCString()}`;
 
