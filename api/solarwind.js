@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     let kp = null;
     try {
       const kpRes = await fetch(
-        "https://services.swpc.noaa.gov/json/noaa-planetary-k-index.json",
+        "https://services.swpc.noaa.gov/json/planetary-k-index_1m.json",
         { cache: "no-store" }
       );
       const kpData = await kpRes.json();
