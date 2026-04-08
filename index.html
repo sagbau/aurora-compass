@@ -16,6 +16,7 @@
   <div id="bz">Bz: —</div>
   <div id="speed">Speed: —</div>
   <div id="density">Density: —</div>
+  <div id="bt">Bt: —</div>
 </div>
 
 <script>
@@ -28,6 +29,8 @@
         "Speed: " + d.speed + " km/s";
       document.getElementById("density").textContent =
         "Density: " + d.density + " p/cm³";
+      document.getElementById("bt").textContent =
+        "Bt: " + data.bt + " nT";
     })
     .catch(err => {
       console.error(err);
