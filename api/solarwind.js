@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     }
 
     res.status(200).json({
-      speed: Number(wind.proton_speed),
-      density: Number(wind.proton_density),
-      bt: Number(mag.bt),
-      bz: Number(mag.bz_gsm),
+      speed: Number(proton_speed),
+      density: Number(proton_density),
+      bt: Number(bt),
+      bz: Number(bz_gsm),
       timestamp: mag.time_tag,
       source: mag.source
     });
