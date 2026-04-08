@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   try {
     // ===============================
-    // RTSW – solar wind (speed, density)
+    // RTSW – wind
     // ===============================
     const windRes = await fetch(
       "https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json",
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const windData = await windRes.json();
 
     // ===============================
-    // RTSW – magnetické pole (Bt, Bz)
+    // RTSW – magnetic field
     // ===============================
     const magRes = await fetch(
       "https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json",
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const magData = await magRes.json();
 
     // ===============================
-    // KP index (není kritický)
+    // KP index
     // ===============================
     let kp = null;
     try {
@@ -28,14 +28,21 @@ export default async function handler(req, res) {
         { cache: "no-store" }
       );
       const kpData = await kpRes.json();
-      kp = kpData[kpData.length - 1]?.Kp ?? null;
-    } catch (e) {
-      kp = null; // KP NIKDY NESMÍ SHODIT ENDPOINT
+
+      // vezmi poslední platnou hodnotu Kp
+      for (let i = kpData.length - 1; i >= 0; i--) {
+        if (kpData[i].Kp !== undefined && kpData[i].Kp !== null) {
+          kp = Number(kpData[i].Kp);
+          break;
+        }
+      }
+    } catch {
+      kp = null;
     }
 
-    // ====================================================
-    // Vyber dat – preferuj DSCOVR, fallback ACE
-    // ====================================================
+    // ===============================
+    // Preferuj DSCOVR, fallback ACE
+    // ===============================
     const wind =
       windData.find(d => d.source === "DSCOVR" && d.proton_speed != null) ||
       windData.find(d => d.proton_speed != null);
@@ -44,29 +51,22 @@ export default async function handler(req, res) {
       magData.find(d => d.source === "DSCOVR" && d.bz_gsm != null) ||
       magData.find(d => d.bz_gsm != null);
 
-    // Pokud nejsou aspoň základní solar wind + IMF data
     if (!wind || !mag) {
-      return res.status(503).json({
-        error: "Solar wind data unavailable"
-      });
+      return res.status(503).json({ error: "Solar wind unavailable" });
     }
 
-    // ===============================
-    // Finální odpověď
-    // ===============================
     res.status(200).json({
       bz: Number(mag.bz_gsm),
       bt: Number(mag.bt),
       speed: Number(wind.proton_speed),
       density: Number(wind.proton_density),
-      kp: kp !== null ? Number(kp) : null,
+      kp: kp,                     // ✅ bude číslo nebo null
       timestamp: mag.time_tag,
-      source: mag.source // DSCOVR pokud je, jinak ACE
+      source: mag.source
     });
-
   } catch (err) {
-    console.error("Solarwind API error:", err);
-    res.status(500).json({ error: "Failed to load solar wind data" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to load data" });
   }
 }
 ``
