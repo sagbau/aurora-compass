@@ -20,7 +20,7 @@
       background: #141a34;
       border-radius: 16px;
       padding: 24px;
-      width: 360px;
+      width: 380px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     }
 
@@ -29,8 +29,14 @@
       font-size: 15px;
     }
 
-    .meta {
+    .section {
       margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .meta {
+      margin-top: 12px;
       font-size: 12px;
       opacity: 0.7;
     }
@@ -41,14 +47,29 @@
 <h1>Aurora Compass</h1>
 
 <div class="card" id="card">
+
+  <!-- Solar wind -->
   <div class="row" id="bz">Bz: —</div>
   <div class="row" id="bt">Bt: —</div>
   <div class="row" id="speed">Speed: —</div>
   <div class="row" id="density">Density: —</div>
-  <div class="row" id="kp">Kp: —</div>
 
-  <div class="meta" id="time">Time: —</div>
+  <!-- Geomagnetic activity -->
+  <div class="section">
+    <div class="row" id="kpNow">Kp now: —</div>
+    <div class="row" id="kpForecast">Kp forecast (24h): —</div>
+  </div>
+
+  <!-- Propagation -->
+  <div class="section">
+    <div class="row" id="eta">ETA to Earth: —</div>
+    <div class="row" id="arrival">Expected arrival: —</div>
+  </div>
+
+  <!-- Meta -->
+  <div class="meta" id="time">Measurement time: —</div>
   <div class="meta" id="source">Source: —</div>
+
 </div>
 
 <script>
@@ -58,6 +79,8 @@
       return res.json();
     })
     .then(data => {
+
+      // Solar wind
       document.getElementById("bz").textContent =
         "Bz: " + data.bz.toFixed(2) + " nT";
       document.getElementById("bt").textContent =
@@ -67,20 +90,37 @@
       document.getElementById("density").textContent =
         "Density: " + data.density.toFixed(2) + " p/cm³";
 
-      document.getElementById("kp").textContent =
-        data.kp !== null ? "Kp: " + data.kp : "Kp: n/a";
+      // Kp
+      document.getElementById("kpNow").textContent =
+        data.kpNow !== null
+          ? "Kp now: " + data.kpNow
+          : "Kp now: n/a";
 
+      document.getElementById("kpForecast").textContent =
+        data.kpForecast24h !== null
+          ? "Kp forecast (24h): " + data.kpForecast24h
+          : "Kp forecast (24h): n/a";
+
+      // ETA
+      document.getElementById("eta").textContent =
+        "ETA to Earth: " + data.etaMinutes + " min";
+
+      document.getElementById("arrival").textContent =
+        "Expected arrival: " + new Date(data.arrivalTime).toUTCString();
+
+      // Meta
       document.getElementById("time").textContent =
-        "Time: " + data.timestamp;
+        "Measurement time: " + data.timestamp;
       document.getElementById("source").textContent =
         "Source: " + data.source;
+
     })
     .catch(err => {
       console.warn("Solarwind fetch failed:", err);
-      // ❗ NIC NESMAZAT
+      // NIC nemažeme – jen neaktualizujeme
     });
 </script>
 
-
 </body>
 </html>
+``
