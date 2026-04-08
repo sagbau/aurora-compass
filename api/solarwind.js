@@ -1,33 +1,36 @@
 export default async function handler(req, res) {
   try {
-    // ===== RTSW WIND (speed + density)
     const windRes = await fetch(
       "https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json",
       { cache: "no-store" }
     );
     const windData = await windRes.json();
 
-    // ===== RTSW MAG (Bt + Bz)
     const magRes = await fetch(
       "https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json",
       { cache: "no-store" }
     );
     const magData = await magRes.json();
 
-    // ===== KP INDEX
     const kpRes = await fetch(
       "https://services.swpc.noaa.gov/json/noaa-planetary-k-index.json",
       { cache: "no-store" }
     );
     const kpData = await kpRes.json();
 
-    // ===== najdi poslední AKTIVNÍ hodnoty
-    const wind = windData.find(item => item.active === true);
-    const mag = magData.find(item => item.active === true);
+    // ✅ preferuj DSCOVR, fallback ACE
+    const wind =
+      windData.find(d => d.source === "DSCOVR" && d.proton_speed != null) ||
+      windData.find(d => d.proton_speed != null);
+
+    const mag =
+      magData.find(d => d.source === "DSCOVR" && d.bz_gsm != null) ||
+      magData.find(d => d.bz_gsm != null);
+
     const kp = kpData[kpData.length - 1]?.Kp;
 
-    if (!wind || !mag || kp === undefined) {
-      return res.status(503).json({ error: "NOAA data not available" });
+    if (!wind || !mag) {
+      return res.status(500).json({ error: "No usable NOAA data" });
     }
 
     res.status(200).json({
@@ -37,8 +40,9 @@ export default async function handler(req, res) {
       density: Number(wind.proton_density),
       kp: Number(kp),
       timestamp: mag.time_tag,
-      source: mag.source
+      source: mag.source   // ✅ DSCOVR pokud je, jinak ACE
     });
+
   } catch (err) {
     res.status(500).json({ error: "Failed to load NOAA data" });
   }
