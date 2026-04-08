@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const magData = await magRes.json();
 
     // ===============================
-    // KP NOW (planetary, 1m)
+    // KP NOW
     // ===============================
     let kpNow = null;
     try {
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     } catch {}
 
     // ===============================
-    // KP FORECAST (NOAA 3-day)
+    // KP FORECAST (24 h max)
     // ===============================
     let kpForecast24h = null;
     try {
@@ -46,21 +46,6 @@ export default async function handler(req, res) {
         { cache: "no-store" }
       );
       const kpFData = await kpFRes.json();
-
       const now = Date.now();
       const next24h = kpFData.filter(e => {
         if (!e.time_tag || e.kp == null) return false;
-        const t = new Date(e.time_tag).getTime();
-        return t > now && t < now + 24 * 60 * 60 * 1000;
-      });
-
-      if (next24h.length) {
-        kpForecast24h = Math.max(...next24h.map(e => Number(e.kp)));
-      }
-    } catch {}
-
-    // ===============================
-    // Preferuj DSCOVR, fallback ACE
-    // ===============================
-    const wind =
-      windData.find(d => d.source === "DSCOVR" && d.proton_speed != null) ||
