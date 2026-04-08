@@ -7,15 +7,10 @@
     body {
       margin: 0;
       padding: 40px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: system-ui;
       background: linear-gradient(180deg, #050711, #0b1020);
       color: #e6e8ef;
     }
-
-    h1 {
-      margin-bottom: 24px;
-    }
-
     .card {
       background: #141a34;
       border-radius: 16px;
@@ -23,102 +18,62 @@
       width: 380px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     }
-
-    .row {
-      margin: 6px 0;
-      font-size: 15px;
-    }
-
+    .row { margin: 6px 0; }
     .section {
       margin-top: 14px;
       padding-top: 10px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
-
-    .meta {
-      margin-top: 12px;
-      font-size: 12px;
-      opacity: 0.7;
-    }
+    .meta { opacity: 0.7; font-size: 12px; }
   </style>
 </head>
 <body>
 
 <h1>Aurora Compass</h1>
 
-<div class="card" id="card">
-
-  <!-- Solar wind -->
+<div class="card">
   <div class="row" id="bz">Bz: —</div>
   <div class="row" id="bt">Bt: —</div>
   <div class="row" id="speed">Speed: —</div>
   <div class="row" id="density">Density: —</div>
 
-  <!-- Geomagnetic activity -->
   <div class="section">
     <div class="row" id="kpNow">Kp now: —</div>
     <div class="row" id="kpForecast">Kp forecast (24h): —</div>
   </div>
 
-  <!-- Propagation -->
   <div class="section">
     <div class="row" id="eta">ETA to Earth: —</div>
     <div class="row" id="arrival">Expected arrival: —</div>
   </div>
 
-  <!-- Meta -->
   <div class="meta" id="time">Measurement time: —</div>
   <div class="meta" id="source">Source: —</div>
-
 </div>
 
 <script>
   fetch("/api/solarwind")
-    .then(res => {
-      if (!res.ok) throw new Error("API error");
-      return res.json();
-    })
-    .then(data => {
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById("bz").textContent = `Bz: ${d.bz.toFixed(2)} nT`;
+      document.getElementById("bt").textContent = `Bt: ${d.bt.toFixed(2)} nT`;
+      document.getElementById("speed").textContent = `Speed: ${d.speed.toFixed(1)} km/s`;
+      document.getElementById("density").textContent = `Density: ${d.density.toFixed(2)} p/cm³`;
 
-      // Solar wind
-      document.getElementById("bz").textContent =
-        "Bz: " + data.bz.toFixed(2) + " nT";
-      document.getElementById("bt").textContent =
-        "Bt: " + data.bt.toFixed(2) + " nT";
-      document.getElementById("speed").textContent =
-        "Speed: " + data.speed.toFixed(1) + " km/s";
-      document.getElementById("density").textContent =
-        "Density: " + data.density.toFixed(2) + " p/cm³";
-
-      // Kp
       document.getElementById("kpNow").textContent =
-        data.kpNow !== null
-          ? "Kp now: " + data.kpNow
-          : "Kp now: n/a";
+        d.kpNow != null ? `Kp now: ${d.kpNow}` : "Kp now: n/a";
 
       document.getElementById("kpForecast").textContent =
-        data.kpForecast24h !== null
-          ? "Kp forecast (24h): " + data.kpForecast24h
-          : "Kp forecast (24h): n/a";
+        d.kpForecast24h != null ? `Kp forecast (24h): ${d.kpForecast24h}` : "Kp forecast (24h): n/a";
 
-      // ETA
-      document.getElementById("eta").textContent =
-        "ETA to Earth: " + data.etaMinutes + " min";
-
+      document.getElementById("eta").textContent = `ETA to Earth: ${d.etaMinutes} min`;
       document.getElementById("arrival").textContent =
-        "Expected arrival: " + new Date(data.arrivalTime).toUTCString();
+        `Expected arrival: ${new Date(d.arrivalTime).toUTCString()}`;
 
-      // Meta
-      document.getElementById("time").textContent =
-        "Measurement time: " + data.timestamp;
-      document.getElementById("source").textContent =
-        "Source: " + data.source;
-
+      document.getElementById("time").textContent = `Measurement time: ${d.timestamp}`;
+      document.getElementById("source").textContent = `Source: ${d.source}`;
     })
-    .catch(err => {
-      console.warn("Solarwind fetch failed:", err);
-      // NIC nemažeme – jen neaktualizujeme
-    });
+    .catch(err => console.warn(err));
 </script>
 
 </body>
