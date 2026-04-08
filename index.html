@@ -1,17 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Aurora Compass</title>
+  <style>
+    body { background:#0b1020; color:#e6e8ef; font-family: system-ui; }
+    .card { background:#141a34; padding:20px; width:320px; border-radius:12px; }
+  </style>
+</head>
+<body>
+
+<h1>Aurora Compass</h1>
+
+<div class="card">
+  <div id="bz">Bz: —</div>
+  <div id="speed">Speed: —</div>
+  <div id="density">Density: —</div>
+</div>
+
 <script>
   fetch("/api/solarwind")
-    .then(res => res.json())
-    .then(data => {
+    .then(r => r.json())
+    .then(d => {
       document.getElementById("bz").textContent =
-        "Bz: " + data.bz + " nT";
+        "Bz: " + d.bz + " nT";
       document.getElementById("speed").textContent =
-        "Speed: " + data.speed + " km/s";
+        "Speed: " + d.speed + " km/s";
       document.getElementById("density").textContent =
-        "Density: " + data.density + " p/cm³";
+        "Density: " + d.density + " p/cm³";
     })
-    .catch(() => {
-      document.querySelector(".card").textContent =
-        "Live NOAA data unavailable.";
+    .catch(err => {
+      console.error(err);
+      document.querySelector(".card").textContent = "Data error";
     });
 </script>
+
+</body>
+</html>
 ``
