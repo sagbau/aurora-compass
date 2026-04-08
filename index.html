@@ -1,5 +1,5 @@
 <script>
-  fetch("/api/solarwind_rtsw")
+  fetch("/api/solarwind")
     .then(res => res.json())
     .then(data => {
       document.getElementById("bz").textContent =
@@ -14,3 +14,4 @@
         "Live NOAA data unavailable.";
     });
 </script>
+``
