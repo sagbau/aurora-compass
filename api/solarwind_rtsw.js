@@ -1,35 +1,36 @@
 export default async function handler(req, res) {
   try {
-    // RTSW – solar wind (speed, density)
+    // Solar wind (speed + density)
     const windRes = await fetch(
       "https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json",
       { cache: "no-store" }
     );
-    const wind = await windRes.json();
+    const windData = await windRes.json();
 
-    // RTSW – magnetické pole (Bt, Bz)
+    // Magnetické pole (Bt, Bz)
     const magRes = await fetch(
       "https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json",
       { cache: "no-store" }
     );
-    const mag = await magRes.json();
+    const magData = await magRes.json();
 
-    // vezmeme poslední ACTIVE záznam
-    const w = wind.find(item => item.status === "active");
-    const m = mag.find(item => item.status === "active");
+    // poslední AKTIVNÍ záznam
+    const wind = windData.find(item => item.active === true);
+    const mag = magData.find(item => item.active === true);
 
-    if (!w || !m) {
+    if (!wind || !mag) {
       return res.status(503).json({ error: "NOAA data not active" });
     }
 
     res.status(200).json({
-      speed: Number(w.speed),
-      density: Number(w.density),
-      bt: Number(m.bt),
-      bz: Number(m.bz),
-      timestamp: m.time_tag,
-      source: "NOAA RTSW"
+      speed: Number(wind.proton_speed),
+      density: Number(wind.proton_density),
+      bt: Number(mag.bt),
+      bz: Number(mag.bz_gsm),
+      timestamp: mag.time_tag,
+      source: mag.source
     });
+
   } catch (err) {
     res.status(500).json({ error: "Failed to load NOAA RTSW data" });
   }
