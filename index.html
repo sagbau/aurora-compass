@@ -1,43 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Aurora Compass</title>
   <style>
-    body { background:#0b1020; color:#e6e8ef; font-family: system-ui; }
-    .card { background:#141a34; padding:20px; width:320px; border-radius:12px; }
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #050711, #0b1020);
+      color: #e6e8ef;
+    }
+
+    h1 {
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #141a34;
+      border-radius: 16px;
+      padding: 24px;
+      width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .row {
+      margin: 6px 0;
+      font-size: 15px;
+    }
+
+    .meta {
+      margin-top: 14px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
 
 <h1>Aurora Compass</h1>
 
-<div class="card">
-  <div id="bz">Bz: —</div>
-  <div id="speed">Speed: —</div>
-  <div id="density">Density: —</div>
-  <div id="bt">Bt: —</div>
+<div class="card" id="card">
+  <div class="row" id="bz">Bz: —</div>
+  <div class="row" id="bt">Bt: —</div>
+  <div class="row" id="speed">Speed: —</div>
+  <div class="row" id="density">Density: —</div>
+  <div class="row" id="kp">Kp: —</div>
+
+  <div class="meta" id="time">Time: —</div>
+  <div class="meta" id="source">Source: —</div>
 </div>
 
 <script>
   fetch("/api/solarwind")
-    .then(r => r.json())
-    .then(d => {
+    .then(res => {
+      if (!res.ok) throw new Error("API error");
+      return res.json();
+    })
+    .then(data => {
       document.getElementById("bz").textContent =
-        "Bz: " + d.bz + " nT";
-      document.getElementById("speed").textContent =
-        "Speed: " + d.speed + " km/s";
-      document.getElementById("density").textContent =
-        "Density: " + d.density + " p/cm³";
+        "Bz: " + data.bz.toFixed(2) + " nT";
       document.getElementById("bt").textContent =
-        "Bt: " + data.bt + " nT";
+        "Bt: " + data.bt.toFixed(2) + " nT";
+      document.getElementById("speed").textContent =
+        "Speed: " + data.speed.toFixed(1) + " km/s";
+      document.getElementById("density").textContent =
+        "Density: " + data.density.toFixed(2) + " p/cm³";
+      document.getElementById("kp").textContent =
+        "Kp: " + data.kp;
+
+      document.getElementById("time").textContent =
+        "Time: " + data.timestamp;
+      document.getElementById("source").textContent =
+        "Source: " + data.source;
     })
     .catch(err => {
+      document.getElementById("card").textContent =
+        "Data unavailable";
       console.error(err);
-      document.querySelector(".card").textContent = "Data error";
     });
 </script>
 
 </body>
 </html>
-``
