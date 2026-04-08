@@ -18,27 +18,30 @@ export default async function handler(req, res) {
     );
     const magData = await magRes.json();
 
-    // ===============================
-    // KP index
-    // ===============================
-    let kp = null;
-    try {
-      const kpRes = await fetch(
-        "https://services.swpc.noaa.gov/json/planetary-k-index_1m.json",
-        { cache: "no-store" }
-      );
-      const kpData = await kpRes.json();
+   // ===============================
+// KP index (planetary, 1m)
+// ===============================
+let kp = null;
+try {
+  const kpRes = await fetch(
+    "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json",
+    { cache: "no-store" }
+  );
+  const kpData = await kpRes.json();
 
-      // vezmi poslední platnou hodnotu Kp
-      for (let i = kpData.length - 1; i >= 0; i--) {
-        if (kpData[i].Kp !== undefined && kpData[i].Kp !== null) {
-          kp = Number(kpData[i].Kp);
-          break;
-        }
-      }
-    } catch {
-      kp = null;
+  // vezmi poslední platný kp_index
+  for (let i = kpData.length - 1; i >= 0; i--) {
+    if (
+      kpData[i].kp_index !== undefined &&
+      kpData[i].kp_index !== null
+    ) {
+      kp = Number(kpData[i].kp_index);
+      break;
     }
+  }
+} catch {
+  kp = null; // KP NIKDY nesmí shodit endpoint
+}
 
     // ===============================
     // Preferuj DSCOVR, fallback ACE
