@@ -66,8 +66,9 @@
         "Speed: " + data.speed.toFixed(1) + " km/s";
       document.getElementById("density").textContent =
         "Density: " + data.density.toFixed(2) + " p/cm³";
+
       document.getElementById("kp").textContent =
-        "Kp: " + data.kp;
+        data.kp !== null ? "Kp: " + data.kp : "Kp: n/a";
 
       document.getElementById("time").textContent =
         "Time: " + data.timestamp;
@@ -75,11 +76,11 @@
         "Source: " + data.source;
     })
     .catch(err => {
-      document.getElementById("card").textContent =
-        "Data unavailable";
-      console.error(err);
+      console.warn("Solarwind fetch failed:", err);
+      // ❗ NIC NESMAZAT
     });
 </script>
+
 
 </body>
 </html>
