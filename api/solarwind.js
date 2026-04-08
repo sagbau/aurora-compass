@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   try {
     // ===============================
-    // RTSW – wind
+    // RTSW – solar wind (NOW)
     // ===============================
     const windRes = await fetch(
       "https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json",
@@ -9,57 +9,13 @@ export default async function handler(req, res) {
     );
     const windData = await windRes.json();
 
-    // ===============================
-    // RTSW – magnetic field
-    // ===============================
     const magRes = await fetch(
       "https://services.swpc.noaa.gov/json/rtsw/rtsw_mag_1m.json",
       { cache: "no-store" }
     );
     const magData = await magRes.json();
 
-    // ===============================
-    // KP NOW
-    // ===============================
-    let kpNow = null;
-    try {
-      const kpRes = await fetch(
-        "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json",
-        { cache: "no-store" }
-      );
-      const kpData = await kpRes.json();
-      for (let i = kpData.length - 1; i >= 0; i--) {
-        if (kpData[i].kp_index != null) {
-          kpNow = Number(kpData[i].kp_index);
-          break;
-        }
-      }
-    } catch {}
-
-    // ===============================
-    // KP FORECAST (24 h max)
-    // ===============================
-    let kpForecast24h = null;
-    try {
-      const kpFRes = await fetch(
-        "https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json",
-        { cache: "no-store" }
-      );
-      const kpFData = await kpFRes.json();
-      const now = Date.now();
-      const next24h = kpFData.filter(e => {
-        if (!e.time_tag || e.kp == null) return false;
-        const t = new Date(e.time_tag).getTime();
-        return t > now && t < now + 24 * 60 * 60 * 1000;
-      });
-      if (next24h.length) {
-        kpForecast24h = Math.max(...next24h.map(e => Number(e.kp)));
-      }
-    } catch {}
-
-    // ===============================
     // Preferuj DSCOVR
-    // ===============================
     const wind =
       windData.find(d => d.source === "DSCOVR" && d.proton_speed != null) ||
       windData.find(d => d.proton_speed != null);
@@ -73,20 +29,72 @@ export default async function handler(req, res) {
     }
 
     // ===============================
-    // ETA
+    // Kp NOW (1m nowcast)
+    // ===============================
+    let kpNow = null;
+    try {
+      const kpRes = await fetch(
+        "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json",
+        { cache: "no-store" }
+      );
+      const kpData = await kpRes.json();
+      const last = kpData.findLast(e => e.kp_index != null);
+      if (last) kpNow = Number(last.kp_index);
+    } catch {}
+
+    // ===============================
+    // Kp FORECAST – 2h / 24h / 72h
+    // ===============================
+    let kp2h = null;
+    let kp24h = null;
+    let kp72h = null;
+
+    try {
+      const kpFRes = await fetch(
+        "https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json",
+        { cache: "no-store" }
+      );
+      const kpFData = await kpFRes.json();
+      const now = Date.now();
+
+      const inRange = (h) =>
+        kpFData
+          .filter(e => e.time_tag && e.kp != null)
+          .filter(e => {
+            const t = new Date(e.time_tag).getTime();
+            return t > now && t <= now + h * 60 * 60 * 1000;
+          })
+          .map(e => Number(e.kp));
+
+      const r2 = inRange(2);
+      const r24 = inRange(24);
+      const r72 = inRange(72);
+
+      if (r2.length) kp2h = Math.max(...r2);
+      if (r24.length) kp24h = Math.max(...r24);
+      if (r72.length) kp72h = Math.max(...r72);
+    } catch {}
+
+    // ===============================
+    // ETA (DSCOVR → Earth)
     // ===============================
     const DISTANCE_KM = 1500000;
     const etaSeconds = DISTANCE_KM / wind.proton_speed;
 
     res.status(200).json({
+      // Solar wind (NOW)
       bz: Number(mag.bz_gsm),
       bt: Number(mag.bt),
       speed: Number(wind.proton_speed),
       density: Number(wind.proton_density),
 
+      // Kp
       kpNow,
-      kpForecast24h,
+      kpForecast2h: kp2h,
+      kpForecast24h: kp24h,
+      kpForecast72h: kp72h,
 
+      // Timing
       etaMinutes: Math.round(etaSeconds / 60),
       arrivalTime: new Date(Date.now() + etaSeconds * 1000).toISOString(),
 
